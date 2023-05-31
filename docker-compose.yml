@@ -1,0 +1,140 @@
+version: '3.2'
+
+networks:
+  backend-network:
+    driver: bridge
+
+volumes:
+    db-data:
+
+services:
+
+  queue:
+    # image: 'artjoker/8.1:php-dev'
+    image: 'artjoker/php:8.2-dev'
+    user: '${USER_ID:-1000}:${GROUP_ID:-1000}'
+    restart: on-failure
+    volumes:
+      - '/etc/passwd:/etc/passwd:ro'
+      - '/etc/group:/etc/group:ro'
+      - './:/app'
+    env_file:
+      - .env
+    command: 'php /app/artisan queue:work'
+    depends_on:
+      - redis
+      - mysql
+    networks:
+      - backend-network
+
+  cron:
+    # image: 'artjoker/8.1:php-dev'
+    image: 'artjoker/php:8.2-dev'
+    user: '${USER_ID:-1000}:${GROUP_ID:-1000}'
+    restart: on-failure
+    volumes:
+      - '/etc/passwd:/etc/passwd:ro'
+      - '/etc/group:/etc/group:ro'
+      - './:/app'
+    env_file:
+      - .env
+    command: /usr/local/bin/supercronic /usr/cron/cron.conf
+    depends_on:
+      - redis
+      - mysql
+    networks:
+      - backend-network
+
+  php:
+    # image: 'artjoker/8.1:php-dev'
+    image: 'artjoker/php:8.2-dev'
+    user: '${USER_ID:-1000}:${GROUP_ID:-1000}'
+    restart: on-failure
+    volumes:
+      - '/etc/passwd:/etc/passwd:ro'
+      - '/etc/group:/etc/group:ro'
+      - './:/app'
+      - '/tmp/cache/:/tmp/cache/'
+      # - ./docker/php.ini:/usr/local/etc/php/php.ini
+    env_file:
+      - .env
+    command: php-fpm --nodaemonize -d "opcache.enable=0" -d "display_startup_errors=On" -d "display_errors=On" -d "error_reporting=E_ALL" -R
+    depends_on:
+      - redis
+      - mysql
+    networks:
+      - backend-network
+
+  node:
+    image: 'artjoker/7.4:node'
+    user: '${USER_ID:-1000}:${GROUP_ID:-1000}'
+    restart: on-failure
+    command: /start.sh
+    volumes:
+      - '/etc/passwd:/etc/passwd:ro'
+      - '/etc/group:/etc/group:ro'
+      - './:/app'
+    working_dir: /app
+    networks:
+      - backend-network
+
+  web:
+    image: 'artjoker/7.4:nginx'
+    restart: on-failure
+    volumes:
+      - './:/app:ro'
+    env_file:
+      - .env
+    depends_on:
+      - php
+    ports:
+      - '80:80'
+    networks:
+      - backend-network
+
+  redis:
+    image: redis:alpine
+    restart: on-failure
+    healthcheck:
+      test: [ "CMD", "redis-cli", "ping" ]
+      interval: 15s
+      timeout: 3s
+      retries: 5
+    networks:
+      - backend-network
+
+  # db:
+  #   image: postgres:14-alpine
+  #   restart: on-failure
+  #   healthcheck:
+  #     test: [ "CMD-SHELL", "pg_isready -U postgres" ]
+  #     interval: 30s
+  #     timeout: 10s
+  #     retries: 5
+  #   environment:
+  #     - POSTGRES_USER=postgres
+  #     - POSTGRES_PASSWORD=password
+  #     - POSTGRES_DB=laravel
+  #     - POSTGRES_HOST=db
+  #   volumes:
+  #     - "./docker/backup:/backup"
+  #     - db-data:/var/lib/postgresql/data
+  #   ports:
+  #     - 5432:5432
+  #   networks:
+  #     - backend-network
+
+  mysql:
+    image: 'mysql:8.0'
+    restart: on-failure
+    environment:
+      MYSQL_DATABASE: ralph_dash
+      MYSQL_USER: homestead
+      MYSQL_PASSWORD: secret
+      MYSQL_ROOT_PASSWORD: secret
+    volumes:
+      - './volumes/db-data:/var/lib/mysql'
+    ports:
+      - '3306:3306'
+    networks:
+      - backend-network

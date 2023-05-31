@@ -1,0 +1,15 @@
+includes:
+    - ./tools/phpstan/vendor/nunomaduro/larastan/extension.neon
+parameters:
+    paths:
+        - app
+        - database/factories
+        - database/seeders
+        - Modules
+    level: 9
+    ignoreErrors:
+    excludePaths:
+    scanFiles:
+        - _ide_helper_models.php
+    checkGenericClassInNonGenericObjectType: false
+    treatPhpDocTypesAsCertain: false
