@@ -6,6 +6,7 @@ networks:
 
 volumes:
     db-data:
+    elastic-data:
 
 services:
 
@@ -138,3 +139,18 @@ services:
       - '3306:3306'
     networks:
       - backend-network
+  elasticsearch:
+      image: 'elasticsearch:8.6.2'
+      environment:
+        - discovery.type=single-node
+        - xpack.security.enabled=$ELASTIC_SECURITY
+        - ELASTIC_USERNAME=$ELASTIC_USERNAME
+        - ELASTIC_PASSWORD=$ELASTIC_PASSWORD
+        - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+      ports:
+        - '9200:9200'
+        - '9300:9300'
+      volumes:
+        - elastic-data:/usr/share/elasticsearch/data
+      networks:
+        - backend-network
