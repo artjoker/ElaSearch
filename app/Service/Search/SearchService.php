@@ -4,14 +4,13 @@ declare(strict_types=1);
 
 namespace App\Service\Search;
 
-use App\Models\Card\Card;
-use App\Models\Post\Post;
-use App\Models\User;
+use App\Models\Product\Brand;
+use App\Models\Product\Category;
+use App\Models\Product\Product;
 use App\Repositories\Search\SearchRepository;
-use App\Service\Search\Dto\SearchResultDto;
-use App\Service\Search\Dto\SearchResultItemDto;
-use App\Service\Search\Dto\SuggestCompletionResultDto;
-use App\Service\Search\Dto\SuggestCompletionResultItemDto;
+use App\Service\Admin\Search\Dto\SearchResultDto;
+use App\Service\Admin\Search\Dto\SuggestCompletionResultDto;
+use App\Service\Admin\Search\Dto\SuggestCompletionResultItemDto;
 use Elastic\Elasticsearch\Exception\ClientResponseException;
 use Elastic\Elasticsearch\Exception\MissingParameterException;
 use Elastic\Elasticsearch\Exception\ServerResponseException;
@@ -24,27 +23,29 @@ class SearchService
     /**
      * @var array|string[]
      */
-    private array $indexMap = [
-        Post::class => 'posts',
-        Card::class => 'cards',
-        User::class => 'users',
-    ];
+    private array $indexMap
+        = [
+            Product::class  => 'products',
+            Category::class => 'categories',
+            Brand::class    => 'brands',
+        ];
 
     /**
      * @param SearchRepository $searchRepository
      */
     public function __construct(
         private readonly SearchRepository $searchRepository,
-    ) {
+    )
+    {
     }
 
     /**
      * @param string $index
      *
-     * @throws ClientResponseException
+     * @return bool
      * @throws MissingParameterException
      * @throws ServerResponseException
-     * @return bool
+     * @throws ClientResponseException
      */
     public function createIndex(string $index): bool
     {
@@ -55,10 +56,10 @@ class SearchService
         $settings = [
             'analysis' => [
                 'analyzer' => [
-                    'my_analyzer' => [
-                        'type'      => 'custom',
-                        'tokenizer' => 'standard',
-                        'filter'    => [
+                    'my_analyzer'      => [
+                        'type'        => 'custom',
+                        'tokenizer'   => 'standard',
+                        'filter'      => [
                             'lowercase',
                         ],
                         'char_filter' => [
@@ -66,9 +67,9 @@ class SearchService
                         ],
                     ],
                     'my_stop_analyzer' => [
-                        'type'      => 'custom',
-                        'tokenizer' => 'standard',
-                        'filter'    => [
+                        'type'        => 'custom',
+                        'tokenizer'   => 'standard',
+                        'filter'      => [
                             'lowercase',
                             'english_stop',
                         ],
@@ -76,7 +77,7 @@ class SearchService
                             'html_strip',
                         ],
                     ],
-                    'trigram' => [
+                    'trigram'          => [
                         'type'      => 'custom',
                         'tokenizer' => 'standard',
                         'filter'    => [
@@ -84,7 +85,7 @@ class SearchService
                             'shingle',
                         ],
                     ],
-                    'reverse' => [
+                    'reverse'          => [
                         'type'      => 'custom',
                         'tokenizer' => 'standard',
                         'filter'    => [
@@ -93,12 +94,12 @@ class SearchService
                         ],
                     ],
                 ],
-                'filter' => [
+                'filter'   => [
                     'english_stop' => [
                         'type'      => 'stop',
                         'stopwords' => '_english_',
                     ],
-                    'shingle' => [
+                    'shingle'      => [
                         'type'             => 'shingle',
                         'min_shingle_size' => 2,
                         'max_shingle_size' => 3,
@@ -109,20 +110,17 @@ class SearchService
 
         $mapping = [
             'properties' => [
-                'id' => [
+                'id'        => [
                     'type' => 'long',
                 ],
-                'published' => [
-                    'type' => 'keyword',
-                ],
-                'title' => [
+                'name'     => [
                     'type'   => 'text',
                     'fields' => [
-                        'trigram' => [
+                        'trigram'    => [
                             'type'     => 'text',
                             'analyzer' => 'trigram',
                         ],
-                        'reverse' => [
+                        'reverse'    => [
                             'type'     => 'text',
                             'analyzer' => 'reverse',
                         ],
@@ -138,7 +136,7 @@ class SearchService
                         ],
                     ],
                 ],
-                'content' => [
+                'description'   => [
                     'type'                  => 'text',
                     'analyzer'              => 'my_analyzer',
                     'search_analyzer'       => 'my_stop_analyzer',
@@ -163,10 +161,10 @@ class SearchService
     /**
      * @param string $index
      *
-     * @throws ClientResponseException
+     * @return bool
      * @throws MissingParameterException
      * @throws ServerResponseException
-     * @return bool
+     * @throws ClientResponseException
      */
     public function deleteIndex(string $index): bool
     {
@@ -180,10 +178,10 @@ class SearchService
     /**
      * @param string $index
      *
-     * @throws ClientResponseException
+     * @return bool
      * @throws MissingParameterException
      * @throws ServerResponseException
-     * @return bool
+     * @throws ClientResponseException
      */
     public function flush(string $index): bool
     {
@@ -197,14 +195,14 @@ class SearchService
     }
 
     /**
-     * @param Card|Post|User $model
+     * @param Category|Product|Brand $model
      *
-     * @throws ClientResponseException
+     * @return bool
      * @throws MissingParameterException
      * @throws ServerResponseException
-     * @return bool
+     * @throws ClientResponseException
      */
-    public function index(Card|Post|User $model): bool
+    public function index(Category|Product|Brand $model): bool
     {
         $result = $this->searchRepository->index(
             $model->getTable(),
@@ -216,13 +214,13 @@ class SearchService
     }
 
     /**
-     * @param string     $index
+     * @param string $index
      * @param int|string $id
      *
-     * @throws ClientResponseException
+     * @return bool
      * @throws MissingParameterException
      * @throws ServerResponseException
-     * @return bool
+     * @throws ClientResponseException
      */
     public function delete(string $index, int|string $id): bool
     {
@@ -232,15 +230,15 @@ class SearchService
     /**
      * @param string $index
      * @param string $query
-     * @param int    $page
+     * @param int $page
      *
-     * @throws ClientResponseException
-     * @throws ServerResponseException
      * @return SearchResultDto
+     * @throws ServerResponseException
+     * @throws ClientResponseException
      */
     public function search(string $index, string $query, int $page): SearchResultDto
     {
-        if (! $page) {
+        if (!$page) {
             $page = 1;
         }
 
@@ -254,9 +252,9 @@ class SearchService
      * @param string $query
      * @param string $field
      *
-     * @throws ClientResponseException
-     * @throws ServerResponseException
      * @return SuggestCompletionResultDto
+     * @throws ServerResponseException
+     * @throws ClientResponseException
      */
     public function suggestCompletion(string $index, string $query, string $field): SuggestCompletionResultDto
     {
@@ -288,7 +286,7 @@ class SearchService
             }
         }
 
-        $searchResultDto = new SearchResultDto();
+        $searchResultDto = new SearchResultDto;
 
         foreach ($items->sortByDesc('score') as $item) {
             $searchResultItemDto        = new SearchResultItemDto();
