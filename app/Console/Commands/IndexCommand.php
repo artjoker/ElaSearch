@@ -1,13 +1,10 @@
 <?php
 
-namespace App\Console\Commands\Search;
+namespace App\Console\Commands;
 
-use App\Models\Card\Card;
-use App\Models\Post\Post;
 use App\Models\Product\Brand;
 use App\Models\Product\Category;
 use App\Models\Product\Product;
-use App\Models\User;
 use App\Service\Search\SearchService;
 use Elastic\Elasticsearch\Exception\ClientResponseException;
 use Elastic\Elasticsearch\Exception\MissingParameterException;
