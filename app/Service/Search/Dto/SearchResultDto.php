@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\Service\Admin\Search\Dto;
+namespace App\Service\Search\Dto;
 
 use Illuminate\Support\Arr;
 

@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace App\Service\Admin\Search\Dto;
+namespace App\Service\Search\Dto;
 
-use App\Models\Card\Card;
-use App\Models\Post\Post;
-use App\Models\User;
+use App\Models\Product\Brand;
+use App\Models\Product\Category;
+use App\Models\Product\Product;
 
 /**
  * Class SearchResultItemDto.
@@ -19,7 +19,7 @@ class SearchResultItemDto
     public float $score;
 
     /**
-     * @var Card|Post|User
+     * @var Category|Product|Brand
      */
-    public Card|Post|User $model;
+    public Category|Product|Brand $model;
 }
