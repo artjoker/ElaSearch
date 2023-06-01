@@ -48,6 +48,17 @@ class Product extends Model
     | FUNCTIONS
     |--------------------------------------------------------------------------
     */
+    /**
+     * @return array
+     */
+    public function toSearchableArray(): array
+    {
+        return [
+            'id'          => $this->id,
+            'name'        => $this->name,
+            'description' => $this->description,
+        ];
+    }
     /*
     |--------------------------------------------------------------------------
     | ACCESSORS

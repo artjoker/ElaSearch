@@ -35,6 +35,7 @@ class SearchRepository
      */
     public function createIndex(string $index, array $settings, array $mappings): bool
     {
+
         if (! $this->elasticsearch->indices()
             ->exists(['index' => $index])
             ->asBool()
