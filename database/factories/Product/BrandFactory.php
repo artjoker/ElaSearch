@@ -17,9 +17,9 @@ class BrandFactory extends Factory
     public function definition(): array
     {
         return [
-            'name'        => $this->faker->unique()->realTextBetween(4, 25),
+            'name'        => $this->faker->title,
             'description' => $this->faker->text(100),
-            'slug'        => $this->faker->word,
+            'slug'        => $this->faker->slug,
         ];
     }
 }

@@ -34,6 +34,7 @@ use Illuminate\Database\Eloquent\Model;
 class Category extends Model
 {
     use HasFactory;
+
     /*
     |--------------------------------------------------------------------------
     | FUNCTIONS
@@ -47,6 +48,7 @@ class Category extends Model
         return [
             'id'          => $this->id,
             'name'        => $this->name,
+            'published'   => $this->is_active ? 'yes' : 'no',
             'description' => $this->description,
         ];
     }

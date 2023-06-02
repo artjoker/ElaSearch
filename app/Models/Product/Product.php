@@ -56,6 +56,7 @@ class Product extends Model
         return [
             'id'          => $this->id,
             'name'        => $this->name,
+            'published'   => $this->is_active ? 'yes' : 'no',
             'description' => $this->description,
         ];
     }

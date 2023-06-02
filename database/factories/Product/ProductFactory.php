@@ -22,10 +22,10 @@ class ProductFactory extends Factory
     public function definition(): array
     {
         return [
-            'name'        => $this->faker->unique()->realTextBetween(4, 25),
+            'name'        => $this->faker->title,
             'description' => $this->faker->text(100),
-            'short_name'  => $this->faker->unique()->realTextBetween(4, 25),
-            'slug'        => $this->faker->word,
+            'short_name'  => $this->faker->title,
+            'slug'        => $this->faker->slug,
             'category_id' => Category::factory(),
             'brand_id'    => Brand::factory(),
             'price'       => $this->faker->numberBetween(1, 200),

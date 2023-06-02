@@ -17,10 +17,10 @@ class CategoryFactory extends Factory
     public function definition(): array
     {
         return [
-            'name'        => $this->faker->unique()->realTextBetween(4, 25),
+            'name'        => $this->faker->title,
             'description' => $this->faker->text(100),
-            'short_name'  => $this->faker->unique()->realTextBetween(4, 25),
-            'slug'        => $this->faker->word,
+            'short_name'  => $this->faker->title,
+            'slug'        => $this->faker->slug,
             'parent_id'   => $this->faker->numberBetween(1,10),
             'is_active'   => $this->faker->boolean,
             'created_at'  => $this->faker->dateTimeThisYear,

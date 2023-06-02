@@ -113,6 +113,9 @@ class SearchService
                 'id'        => [
                     'type' => 'long',
                 ],
+                'published' => [
+                    'type' => 'keyword',
+                ],
                 'name'     => [
                     'type'   => 'text',
                     'fields' => [
@@ -126,13 +129,6 @@ class SearchService
                         ],
                         'completion' => [
                             'type'     => 'completion',
-                            'contexts' => [
-                                [
-                                    'name' => 'published',
-                                    'type' => 'category',
-                                    'path' => 'published',
-                                ],
-                            ],
                         ],
                     ],
                 ],
