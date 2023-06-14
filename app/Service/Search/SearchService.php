@@ -9,6 +9,7 @@ use App\Models\Product\Category;
 use App\Models\Product\Product;
 use App\Repositories\Search\SearchRepository;
 use App\Service\Search\Dto\SearchResultDto;
+use App\Service\Search\Dto\SearchResultItemDto;
 use App\Service\Search\Dto\SuggestCompletionResultDto;
 use App\Service\Search\Dto\SuggestCompletionResultItemDto;
 use Elastic\Elasticsearch\Exception\ClientResponseException;

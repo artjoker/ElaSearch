@@ -15,7 +15,6 @@ class AppServiceProvider extends ServiceProvider
         $this->app->bind(Client::class, function ($app) {
             return ClientBuilder::create()
                 ->setHosts($app['config']->get('elasticsearch.hosts'))
-                ->setBasicAuthentication($app['config']->get('elasticsearch.username'), $app['config']->get('elasticsearch.password'))
                 ->build();
         });
     }

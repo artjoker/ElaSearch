@@ -49,7 +49,6 @@ class IndexCommand extends Command
      */
     public function handle()
     {
-        $this->searchService->flush(Product::class);
 
         Product::each(function (Product $product) {
             $this->searchService->index($product);
