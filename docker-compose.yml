@@ -1,12 +1,14 @@
 version: '3.2'
 
 networks:
-  backend-network:
-    driver: bridge
+  elastic:
+    external: true
+  traefik:
+    external: true
 
 volumes:
-    db-data:
-    elastic-data:
+  db-data:
+  elasticsearch-data:
 
 services:
 
@@ -26,7 +28,7 @@ services:
       - redis
       - mysql
     networks:
-      - backend-network
+      - traefik
 
   cron:
     # image: 'artjoker/8.1:php-dev'
@@ -44,7 +46,7 @@ services:
       - redis
       - mysql
     networks:
-      - backend-network
+      - traefik
 
   php:
     # image: 'artjoker/8.1:php-dev'
@@ -64,7 +66,7 @@ services:
       - redis
       - mysql
     networks:
-      - backend-network
+      - traefik
 
   node:
     image: 'artjoker/7.4:node'
@@ -77,7 +79,7 @@ services:
       - './:/app'
     working_dir: /app
     networks:
-      - backend-network
+      - traefik
 
   web:
     image: 'artjoker/7.4:nginx'
@@ -91,7 +93,7 @@ services:
     ports:
       - '80:80'
     networks:
-      - backend-network
+      - traefik
 
   redis:
     image: redis:alpine
@@ -102,7 +104,8 @@ services:
       timeout: 3s
       retries: 5
     networks:
-      - backend-network
+      - traefik
+
 
   # db:
   #   image: postgres:14-alpine
@@ -129,8 +132,8 @@ services:
     image: 'mysql:8.0'
     restart: on-failure
     environment:
-      MYSQL_DATABASE: ralph_dash
-      MYSQL_USER: homestead
+      MYSQL_DATABASE: laravel
+      MYSQL_USER: root
       MYSQL_PASSWORD: secret
       MYSQL_ROOT_PASSWORD: secret
     volumes:
@@ -138,19 +141,69 @@ services:
     ports:
       - '3306:3306'
     networks:
-      - backend-network
-  elasticsearch:
-      image: 'elasticsearch:8.6.2'
-      environment:
-        - discovery.type=single-node
-        - xpack.security.enabled=$ELASTIC_SECURITY
-        - ELASTIC_USERNAME=$ELASTIC_USERNAME
-        - ELASTIC_PASSWORD=$ELASTIC_PASSWORD
-        - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
-      ports:
-        - '9200:9200'
-        - '9300:9300'
-      volumes:
-        - elastic-data:/usr/share/elasticsearch/data
-      networks:
-        - backend-network
+      - traefik
+  es1:
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.17.1
+    container_name: es1
+    restart: always
+    environment:
+      - node.name=es1
+      - discovery.type=single-node
+      - network.host=0.0.0.0
+      #Dejavu UI
+      - http.port=9200
+      - http.cors.enabled=true
+      - http.cors.allow-origin=*
+      - http.cors.allow-headers=X-Requested-With,X-Auth-Token,Content-Type,Content-Length,Authorization
+      - http.cors.allow-methods=OPTIONS, HEAD, GET, POST, PUT, DELETE
+      - http.cors.allow-credentials=true
+      - cluster.name=es-cluster
+      - ELASTIC_PASSWORD=meganote
+      #- discovery.seed_hosts=es02,es03
+      #- cluster.initial_master_nodes=es01,es02,es03
+      - bootstrap.memory_lock=true
+      - xpack.license.self_generated.type=basic
+      - xpack.monitoring.collection.enabled=true
+      - xpack.security.enabled=false
+      - action.destructive_requires_name=false
+      - "ES_JAVA_OPTS=-Xms256m -Xmx256m"
+    deploy:
+      resources:
+        limits:
+          cpus: "2"  # Use at most 50% of one CPU core
+          memory: 2G  # Use at most 2G of RAM
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+      nproc:
+        soft: 65535
+        hard: 65536
+      nofile:
+        soft: 65536
+        hard: 65536
+    volumes:
+      - elasticsearch-data:/var/lib/elasticsearch/data
+    expose:
+      - 9200
+    #ports:
+    #  - "9200:9200"
+    #  - "9300:9300"
+    networks:
+      elastic:
+        aliases: [ "elasticsearch-prod" ]
+      traefik:
+  kibana:
+    container_name: kibana
+    restart: always
+    image: docker.elastic.co/kibana/kibana:7.17.1
+    ports:
+      - 5601:5601
+    volumes:
+      #      - kibanadata:/usr/share/kibana/data
+      - ./kibana.yml:/usr/share/kibana/config/kibana.yml
+    networks:
+      elastic:
+      traefik:
+    depends_on:
+      - es1

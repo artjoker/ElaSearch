@@ -2,12 +2,11 @@
 
 declare(strict_types=1);
 
-namespace App\Service\Admin\Search\Dto;
+namespace App\Service\Search\Dto;
 
-use App\Enums\Post\PostType;
-use App\Models\Card\Card;
-use App\Models\Post\Post;
-use App\Models\User;
+use App\Models\Product\Brand;
+use App\Models\Product\Category;
+use App\Models\Product\Product;
 use Illuminate\Support\Arr;
 
 /**
@@ -27,11 +26,11 @@ class SuggestCompletionResultDto
     {
         return Arr::map($this->items, function (SuggestCompletionResultItemDto $item) {
             return [
-                'text' => $item->text,
-                'link' => match (get_class($item->model)) {
-                    Card::class => route('getCard', ['alias' => $item->model->link]),
-                    Post::class => route($item->model->type_id == PostType::Article->value ? 'frontend.articles.post' : 'frontend.blog.post', ['alias' => $item->model->link]),
-                    User::class => route('frontend.author.index', ['alias' => $item->model->link]),
+                'description' => $item->description,
+                'slug'        => match (get_class($item->model)) {
+                    Product::class => route('product', ['alias' => $item->model->slug]),
+                    Category::class => route('category', ['alias' => $item->model->slug]),
+                    Brand::class => route('brand', ['alias' => $item->model->slug]),
                 },
             ];
         });

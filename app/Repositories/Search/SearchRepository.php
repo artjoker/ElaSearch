@@ -35,6 +35,7 @@ class SearchRepository
      */
     public function createIndex(string $index, array $settings, array $mappings): bool
     {
+
         if (! $this->elasticsearch->indices()
             ->exists(['index' => $index])
             ->asBool()
@@ -131,9 +132,9 @@ class SearchRepository
             'size'    => Constants::SEARCH_PER_PAGE,
             'body'    => [
                 'indices_boost' => [
-                    ['cards' => 1.5],
-                    ['posts' => 1.3],
-                    ['users' => 1],
+                    ['products' => 1.5],
+                    ['categories' => 1.3],
+                    ['brands' => 1],
                 ],
                 'query' => [
                     'bool' => [

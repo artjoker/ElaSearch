@@ -1,10 +1,10 @@
 <?php
 
-namespace App\Console\Commands\Search;
+namespace App\Console\Commands;
 
-use App\Models\Card\Card;
-use App\Models\Post\Post;
-use App\Models\User;
+use App\Models\Product\Brand;
+use App\Models\Product\Category;
+use App\Models\Product\Product;
 use App\Service\Search\SearchService;
 use Elastic\Elasticsearch\Exception\ClientResponseException;
 use Elastic\Elasticsearch\Exception\MissingParameterException;
@@ -49,22 +49,21 @@ class IndexCommand extends Command
      */
     public function handle()
     {
-        $this->searchService->flush(Post::class);
 
-        Post::each(function (Post $post) {
-            $this->searchService->index($post);
+        Product::each(function (Product $product) {
+            $this->searchService->index($product);
         });
 
-        $this->searchService->flush(Card::class);
+        $this->searchService->flush(Category::class);
 
-        Card::each(function (Card $card) {
-            $this->searchService->index($card);
+        Category::each(function (Category $category) {
+            $this->searchService->index($category);
         });
 
-        $this->searchService->flush(User::class);
+        $this->searchService->flush(Brand::class);
 
-        User::each(function (User $user) {
-            $this->searchService->index($user);
+        Brand::each(function (Brand $brand) {
+            $this->searchService->index($brand);
         });
 
         return Command::SUCCESS;
